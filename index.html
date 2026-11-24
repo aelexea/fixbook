@@ -142,7 +142,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-let state = null, selected = null, modelsKey = null, tempSet = false, glossVer = null;
+let state = null, selected = null, modelsKey = null, tempSet = false, glossVer = null, glossT0 = null;
 
 async function api(path, opts) {
   const r = await fetch(path, opts);
@@ -223,7 +223,15 @@ function render() {
     const pct = job.finished ? 100 : job.total ? 100 * job.done / job.total : 0;
     $('bar').style.width = pct + '%';
     $('s-done').textContent = job.total ? `${job.done} of ${job.total}` : job.finished ? 'all' : 'preparing…';
-    $('s-left').textContent = job.running ? fmtLeft(job.left) : '—';
+    // The glossary stage has no server-side estimate: derive it from the pace seen on this page.
+    let left = job.left;
+    if (gl && job.running && job.total) {
+      if (!glossT0 || glossT0.book !== job.book || job.done < glossT0.done)
+        glossT0 = {book: job.book, done: job.done, t: Date.now()};
+      const made = job.done - glossT0.done;
+      left = made > 0 ? Math.round((job.total - job.done) * (Date.now() - glossT0.t) / made / 60000) : null;
+    }
+    $('s-left').textContent = job.running ? fmtLeft(left) : '—';
     $('s-fail').textContent = job.failed || 0;
     $('s-model').textContent = job.model || '—';
     const m = $('jobmsg');
