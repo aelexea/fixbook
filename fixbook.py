@@ -21,7 +21,7 @@ import zipfile
 from pathlib import Path
 
 # ---- Settings ----
-MODEL = "gemma4:31b-it-qat"   # Ollama model
+MODEL = "gemma4:26b"          # Ollama model
 THINK = False                 # model thinking; None = do not send the parameter (for models without thinking)
 OLLAMA_URL = "http://localhost:11434/api/chat"
 CHUNK_CHARS = 2000            # chunk size, characters

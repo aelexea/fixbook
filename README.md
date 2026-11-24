@@ -24,10 +24,12 @@ translated text, not the original.
 
 - Python 3.10 or newer, standard library only.
 - Ollama running locally with a model that writes good Russian.
-  The default is `gemma4:31b-it-qat`, which fits in 24 GB of VRAM:
+  The default is `gemma4:26b`, which fits in 24 GB of VRAM. On an RTX 3090 it ran at about
+  200 tokens per second, roughly 5 times faster than `gemma4:31b-it-qat`, with similar quality
+  on a small sample:
 
 ```bash
-ollama pull gemma4:31b-it-qat
+ollama pull gemma4:26b
 ```
 
 ## Web page
