@@ -1,0 +1,8 @@
+# Books, results, glossaries and progress never go into the repository
+books/
+*.progress.json
+*.glossary.txt
+*.fixed.*
+
+web.log
+__pycache__/

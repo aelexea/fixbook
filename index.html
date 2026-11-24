@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fixbook</title>
+<style>
+  :root {
+    --bg: #13151a; --card: #1b1e25; --line: #2a2e38; --text: #e6e3dc; --dim: #8d919c;
+    --accent: #e0a458; --accent-ink: #1a1408; --ok: #7fb685; --bad: #d9756a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, "Inter", sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; }
+  header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 24px; }
+  h1 { font: 600 26px/1.2 Georgia, "Noto Serif", serif; margin: 0; letter-spacing: .01em; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--dim); flex: 1; }
+  .pill { font-size: 13px; padding: 3px 11px; border-radius: 99px; border: 1px solid var(--line); color: var(--dim); }
+  .pill.ok { color: var(--ok); border-color: #35513a; }
+  .pill.bad { color: var(--bad); border-color: #5a332f; }
+  .grid { display: grid; grid-template-columns: 340px 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .card + .card { margin-top: 18px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: var(--dim);
+       margin: 0 0 12px; font-weight: 600; }
+  #drop { border: 1.5px dashed #3a3f4c; border-radius: 12px; padding: 26px 14px; text-align: center;
+          color: var(--dim); cursor: pointer; transition: .15s; }
+  #drop:hover, #drop.over { border-color: var(--accent); color: var(--text); background: #20232b; }
+  #drop b { display: block; color: var(--text); font-size: 16px; margin-bottom: 3px; }
+  .book { padding: 10px 12px; border-radius: 10px; cursor: pointer; border: 1px solid transparent;
+          display: flex; gap: 10px; align-items: center; }
+  .book:hover { background: #20232b; }
+  .book.sel { border-color: var(--accent); background: #221f18; }
+  .book .n { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .book .t { font-size: 12px; color: var(--dim); white-space: nowrap; }
+  .book .t.ok { color: var(--ok); }
+  .empty { color: var(--dim); font-size: 14px; padding: 6px 2px; }
+  label { display: block; font-size: 13px; color: var(--dim); margin: 14px 0 5px; }
+  label:first-of-type { margin-top: 0; }
+  input[type=number] { width: 160px; background: #13151a; color: var(--text); border: 1px solid var(--line);
+          border-radius: 9px; padding: 9px 11px; font: inherit; }
+  input[type=number]:focus { outline: none; border-color: var(--accent); }
+  select, textarea { width: 100%; background: #13151a; color: var(--text); border: 1px solid var(--line);
+          border-radius: 9px; padding: 9px 11px; font: inherit; }
+  textarea { min-height: 110px; resize: vertical; }
+  select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+  button, a.btn { font: inherit; font-weight: 600; border-radius: 10px; padding: 10px 20px; cursor: pointer;
+          border: 1px solid var(--line); background: #252933; color: var(--text); text-decoration: none; }
+  button.main { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button:disabled { opacity: .4; cursor: default; }
+  button.ghost { background: none; color: var(--dim); font-weight: 400; padding: 6px 12px; }
+  .bar { height: 10px; background: #13151a; border-radius: 99px; overflow: hidden; border: 1px solid var(--line); }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .4s; }
+  .stats { display: flex; gap: 22px; margin-top: 10px; color: var(--dim); font-size: 14px; flex-wrap: wrap; }
+  .stats b { color: var(--text); font-weight: 600; }
+  .msg { margin-top: 12px; font-size: 14px; white-space: pre-wrap; }
+  .msg.bad { color: var(--bad); } .msg.ok { color: var(--ok); }
+  .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 860px) { .cmp { grid-template-columns: 1fr; } }
+  .cmp h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; margin: 0 0 8px; color: var(--dim); }
+  .cmp .after h3 { color: var(--accent); }
+  .cmp p { font: 16px/1.6 Georgia, "Noto Serif", serif; margin: 0 0 .7em; }
+  .cmp .before p { color: #a9a69f; }
+  footer { margin-top: 26px; display: flex; justify-content: flex-end; }
+  .hide { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Fix<span>book</span></h1>
+    <div class="sub">polish machine-translated books with a local model</div>
+    <div id="ollama" class="pill">Ollama…</div>
+  </header>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>Book</h2>
+        <div id="drop"><b>Drop a book here</b>or click to choose · txt, fb2, epub</div>
+        <input id="file" type="file" accept=".txt,.fb2,.epub" class="hide">
+        <div id="upmsg" class="msg bad hide"></div>
+      </div>
+      <div class="card">
+        <h2>My books</h2>
+        <div id="books"><div class="empty">Nothing yet</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>Settings</h2>
+        <label>Model</label>
+        <select id="model"></select>
+        <div id="modelhint" class="msg bad hide"></div>
+        <label>Editing boldness (temperature): <b id="tval"></b></label>
+        <input id="temp" type="range" min="0" max="1" step="0.05">
+        <label>Edit up to chapter (empty = whole book). <span id="chinfo"></span></label>
+        <input id="upto" type="number" min="1" placeholder="whole book">
+        <label>Glossary: names and terms, one per line. If empty, the model builds it before editing.</label>
+        <textarea id="gloss" placeholder="Empty: built automatically"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button id="mkgloss" disabled>Build glossary now</button>
+        </div>
+        <div class="row">
+          <button id="start" class="main" disabled>Start</button>
+          <button id="stop" class="hide">Stop</button>
+          <a id="dl" class="btn hide">Download result</a>
+          <span id="selname" class="sub"></span>
+        </div>
+      </div>
+
+      <div id="progcard" class="card hide">
+        <h2 id="progtitle">Progress</h2>
+        <div class="bar"><i id="bar"></i></div>
+        <div class="stats">
+          <span>Chunks: <b id="s-done">—</b></span>
+          <span>Time left: <b id="s-left">—</b></span>
+          <span>Unedited: <b id="s-fail">0</b></span>
+          <span>Model: <b id="s-model">—</b></span>
+        </div>
+        <div id="jobmsg" class="msg hide"></div>
+      </div>
+
+      <div id="cmpcard" class="card hide">
+        <h2>Latest chunk</h2>
+        <div class="cmp">
+          <div class="before"><h3>Before</h3><div id="before"></div></div>
+          <div class="after"><h3>After</h3><div id="after"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer><button id="quit" class="ghost">Shut down server</button></footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let state = null, selected = null, modelsKey = null, tempSet = false, glossVer = null;
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+function show(el, on) { el.classList.toggle('hide', !on); }
+function paras(el, list) {
+  el.replaceChildren(...(list || []).map(t => Object.assign(document.createElement('p'), {textContent: t})));
+}
+function fmtLeft(min) {
+  if (min == null) return '—';
+  return min < 60 ? `~${min} min` : `~${Math.floor(min / 60)} h ${min % 60} min`;
+}
+
+function render() {
+  const s = state, job = s.job;
+  // Ollama and models
+  const o = $('ollama');
+  o.textContent = s.models === null ? 'Ollama is not responding' : 'Ollama is running';
+  o.className = 'pill ' + (s.models === null ? 'bad' : 'ok');
+  const key = JSON.stringify(s.models);
+  if (key !== modelsKey) {
+    modelsKey = key;
+    const list = s.models || [];
+    const keep = $('model').value || s.defaults.model;
+    $('model').replaceChildren(...list.map(m => new Option(m, m)));
+    if (list.includes(keep)) $('model').value = keep;
+    const hint = $('modelhint');
+    show(hint, !list.length);
+    hint.textContent = s.models === null
+      ? 'Start Ollama: sudo systemctl start ollama'
+      : 'No models. Download one: ollama pull ' + s.defaults.model;
+  }
+  if (!tempSet) { tempSet = true; $('temp').value = s.defaults.temperature; $('tval').textContent = $('temp').value; }
+
+  // Books
+  const box = $('books');
+  if (!s.books.length) box.innerHTML = '<div class="empty">Nothing yet</div>';
+  else box.replaceChildren(...s.books.map(b => {
+    const d = document.createElement('div');
+    d.className = 'book' + (b.name === selected ? ' sel' : '');
+    const n = Object.assign(document.createElement('span'), {className: 'n', textContent: b.name, title: b.name});
+    const running = job.running && job.book === b.name;
+    const t = Object.assign(document.createElement('span'), {
+      className: 't' + (b.result ? ' ok' : ''),
+      textContent: running ? 'running' : b.result ? 'done' : b.started ? 'started' : (b.size / 1048576).toFixed(1) + ' MB'});
+    d.append(n, t);
+    d.onclick = () => select(b.name);
+    return d;
+  }));
+
+  // Buttons
+  const book = s.books.find(b => b.name === selected);
+  $('selname').textContent = book ? book.name : 'Choose a book on the left';
+  $('start').disabled = !book || job.running || !$('model').value;
+  $('mkgloss').disabled = $('start').disabled;
+  $('chinfo').textContent = !book ? '' : book.chapters ? `Chapters found in the book: ${book.chapters}.`
+    : 'No chapters found, the whole book is edited.';
+  $('upto').disabled = !book || !book.chapters;
+  // Put the glossary built by the model into the field once, when it is ready.
+  if (job.gloss_ver && job.gloss_ver !== glossVer) {
+    glossVer = job.gloss_ver;
+    if (book && job.book === selected) $('gloss').value = book.glossary;
+  }
+  $('start').textContent = book && book.started && !book.result ? 'Continue' : 'Start';
+  show($('stop'), job.running);
+  show($('dl'), book && book.result && !(job.running && job.book === selected));
+  if (book) $('dl').href = '/api/download?book=' + encodeURIComponent(book.name);
+
+  // Progress
+  show($('progcard'), !!job.book);
+  if (job.book) {
+    const gl = job.stage === 'glossary';
+    $('progtitle').textContent = (gl ? 'Building glossary: ' : 'Editing: ') + job.book
+      + (!gl && job.upto ? ` (up to chapter ${job.upto})` : '');
+    const pct = job.finished ? 100 : job.total ? 100 * job.done / job.total : 0;
+    $('bar').style.width = pct + '%';
+    $('s-done').textContent = job.total ? `${job.done} of ${job.total}` : job.finished ? 'all' : 'preparing…';
+    $('s-left').textContent = job.running ? fmtLeft(job.left) : '—';
+    $('s-fail').textContent = job.failed || 0;
+    $('s-model').textContent = job.model || '—';
+    const m = $('jobmsg');
+    const text = job.error ? job.error
+      : job.finished && gl ? 'Glossary is ready. Review it in the settings and press Start.'
+      : job.finished ? 'Done.' + (job.failed ? ` Unedited chunks: ${job.failed}. Press Start again and only those will be retried.` : '')
+      : job.stopped ? 'Stopped. Progress is saved.' : '';
+    show(m, !!text); m.textContent = text;
+    m.className = 'msg ' + (job.error ? 'bad' : 'ok') + (text ? '' : ' hide');
+  }
+  show($('cmpcard'), !!(job.before && job.before.length));
+  paras($('before'), job.before); paras($('after'), job.after);
+}
+
+function select(name) {
+  selected = name;
+  const b = state.books.find(b => b.name === name);
+  $('gloss').value = b ? b.glossary : '';
+  $('upto').value = localStorage.getItem('upto:' + name) || '';   // the limit is remembered per book
+  render();
+}
+
+async function poll() {
+  try { state = await api('/api/state'); render(); } catch (e) {
+    $('ollama').textContent = 'Server is off'; $('ollama').className = 'pill bad';
+  }
+}
+
+async function upload(file) {
+  const m = $('upmsg'); show(m, false);
+  try {
+    const r = await api('/api/upload?name=' + encodeURIComponent(file.name), {method: 'POST', body: file});
+    await poll(); select(r.name);
+  } catch (e) { m.textContent = e.message; show(m, true); }
+}
+
+const drop = $('drop');
+drop.onclick = () => $('file').click();
+$('file').onchange = e => e.target.files[0] && upload(e.target.files[0]);
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); e.dataTransfer.files[0] && upload(e.dataTransfer.files[0]); };
+$('temp').oninput = () => $('tval').textContent = $('temp').value;
+$('upto').oninput = () => selected && localStorage.setItem('upto:' + selected, $('upto').value);
+
+async function start(onlyGlossary) {
+  try {
+    await api('/api/start', {method: 'POST', body: JSON.stringify({
+      book: selected, model: $('model').value, temperature: $('temp').value,
+      glossary: $('gloss').value, only_glossary: onlyGlossary, upto: $('upto').value})});
+  } catch (e) { alert(e.message); }
+  poll();
+}
+$('start').onclick = () => start(false);
+$('mkgloss').onclick = () => {
+  if ($('gloss').value.trim() && !confirm('Replace the current glossary with a freshly built one?')) return;
+  start(true);
+};
+$('stop').onclick = () => api('/api/stop', {method: 'POST'}).then(poll);
+$('quit').onclick = async () => {
+  if (state && state.job.running && !confirm('A book is being processed. Shut down? Progress is saved.')) return;
+  await api('/api/quit', {method: 'POST'});
+};
+
+poll(); setInterval(poll, 1500);
+</script>
+</body>
+</html>
